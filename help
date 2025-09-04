@@ -1,0 +1,47 @@
+#!/bin/zsh
+
+HELP_DIR="$HOME/binshared/help"
+
+if [[ $# -eq 0 ]]; then
+    echo "Help is available for the following:" 
+    
+    # List files, remove .md extension, and format output
+    for file in "$HELP_DIR"/*.md; do
+        [[ -e $file ]] || continue  # Skip if no .md files exist
+        echo "- ${file:t:r}"
+    done
+
+elif [[ $# -eq 1 ]]; then
+    with_what="$1.md"
+    file_path="$HELP_DIR/$with_what"
+    
+    if [[ -f "$file_path" ]]; then
+        echo ""
+        # Print each line with the line number at the front, including blank lines
+        awk '{printf "%2d %s\n", NR, $0}' "$file_path"
+    else
+        echo "Help for file $1 does not exist"
+    fi
+
+elif [[ $# -eq 2 ]]; then
+    with_what="$1.md"
+    line_number="$2"
+    file_path="$HELP_DIR/$with_what"
+    
+    if [[ -f "$file_path" ]]; then
+        if [[ "$line_number" =~ ^[0-9]+$ ]]; then
+            command=$(sed "${line_number}q;d" "$file_path")
+            echo "Copying line $line_number from $1 to clipboard:"
+            echo "$command"
+            echo "$command" | pbcopy  # Copy the command to the clipboard
+        else
+            echo "The second parameter must be a number representing the line number."
+        fi
+    else
+        echo "Help for file $1 does not exist"
+    fi
+
+else
+    echo "Usage: help.sh [optional topic] [optional line number]"
+    exit 1
+fi

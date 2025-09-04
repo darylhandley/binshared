@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Set target directory (use argument if provided, otherwise current directory)
+target_dir=${1:-.}
+
+# Change to target directory if argument provided
+if [ "$1" ]; then
+    if [ ! -d "$target_dir" ]; then
+        echo "Error: Directory '$target_dir' does not exist"
+        exit 1
+    fi
+    cd "$target_dir"
+fi
+
+# Check if target directory is a git repository
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    if [ "$1" ]; then
+        echo "Error: Directory '$target_dir' is not a git repository"
+    else
+        echo "Error: Current directory is not a git repository"
+    fi
+    exit 1
+fi
+
+# Get the remote URL
+remote_url=$(git remote get-url origin 2>/dev/null)
+
+if [ -z "$remote_url" ]; then
+    echo "Error: No remote 'origin' found"
+    exit 1
+fi
+
+# Convert SSH URL to HTTPS if needed
+if [[ $remote_url == git@github.com:* ]]; then
+    # Convert git@github.com:user/repo.git to https://github.com/user/repo
+    github_url=$(echo $remote_url | sed 's/git@github.com:/https:\/\/github.com\//' | sed 's/\.git$//')
+elif [[ $remote_url == https://github.com/* ]]; then
+    # Remove .git suffix if present
+    github_url=$(echo $remote_url | sed 's/\.git$//')
+else
+    echo "Error: Remote URL is not a GitHub repository"
+    echo "Remote URL: $remote_url"
+    exit 1
+fi
+
+echo "Opening: $github_url"
+open "$github_url"

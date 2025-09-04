@@ -1,0 +1,18 @@
+# show the current status
+echo "Status:"
+git status
+
+
+# Ask for confirmation
+read -p "Do you want to proceed with the commit? [Y/n] " proceed
+proceed=${proceed:-Y}  # Default to Y if empty
+if [[ $proceed =~ ^[Nn] ]]; then
+    echo "Operation cancelled"
+    exit 0
+fi
+
+# discard
+echo "Discarding all changes..."
+git reset --hard
+git clean -fd
+echo "All changes have been discarded."

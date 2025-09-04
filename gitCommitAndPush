@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# add all the files so we can see the status 
+git add -A
+
+# Show current git status
+echo -e "Current git status:"
+git status
+
+# Ask for confirmation
+read -p "Do you want to proceed with the commit? [Y/n] " proceed
+proceed=${proceed:-Y}  # Default to Y if empty
+
+if [[ $proceed =~ ^[Nn] ]]; then
+    echo "Operation cancelled"
+    exit 0
+fi
+
+# Set up the commit message
+if [ $# -eq 0 ]; then
+    # No message provided, prompt for one with default
+    read -p "Enter commit message [savepoint]: " input_message
+    commit_message=${input_message:-savepoint}
+else
+    # Use the provided command line argument
+    commit_message="$1"
+fi
+
+# Execute git commands
+git commit -m "$commit_message" && git push
+
+# Check if the commands were successful
+if [ $? -eq 0 ]; then
+    echo "Successfully committed and pushed changes"
+else
+    echo "Error: Git operations failed"
+    exit 1
+fi

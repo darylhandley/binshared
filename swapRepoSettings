@@ -1,0 +1,35 @@
+#!/bin/bash
+
+M2_DIR="$HOME/.m2"
+SETTINGS_FILE="$M2_DIR/settings.xml"
+
+# Accept target as argument, else prompt
+if [ $# -eq 0 ]; then
+    echo "Choose settings file to swap in:"
+    echo "1) settings_local.xml"
+    echo "2) settings_rsc.xml"
+    read -p "Enter 1 or 2: " choice
+    case $choice in
+        1) target="settings_local.xml" ;;
+        2) target="settings_rsc.xml" ;;
+        *) echo "Invalid choice"; exit 1 ;;
+    esac
+else
+    case "$1" in
+        local) target="settings_local.xml" ;;
+        rsc) target="settings_rsc.xml" ;;
+        *) echo "Invalid target: $1"; echo "Valid options: local, rsc"; exit 1 ;;
+    esac
+fi
+
+if [ ! -f "$M2_DIR/$target" ]; then
+    echo "Target file $M2_DIR/$target does not exist."
+    exit 1
+fi
+
+# Backup current settings.xml
+cp "$SETTINGS_FILE" "$SETTINGS_FILE.bak"
+
+# Swap in the selected settings file
+cp "$M2_DIR/$target" "$SETTINGS_FILE"
+echo "Swapped $target into $SETTINGS_FILE. Backup saved as settings.xml.bak."
