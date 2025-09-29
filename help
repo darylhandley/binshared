@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-HELP_DIR="$HOME/binshared/help"
+HELP_DIR="$HOME/binshared/helpdocs/"
 
 if [[ $# -eq 0 ]]; then
     echo "Help is available for the following:" 
