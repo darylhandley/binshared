@@ -1,16 +1,26 @@
 #!/bin/zsh
+#
+# help - Display help documents from ~/binshared/helpdocs/
+#
+# Usage:
+#   help                  List all available help topics
+#   help <topic>          Display help for <topic> with line numbers
+#   help <topic> <line>   Copy line <line> from <topic> to clipboard
+#
 
 HELP_DIR="$HOME/binshared/helpdocs/"
 
+# No arguments: list all available help topics
 if [[ $# -eq 0 ]]; then
     echo "Help is available for the following:" 
     
-    # List files, remove .md extension, and format output
+    # ${file:t:r} strips directory path (:t) and extension (:r) - zsh syntax
     for file in "$HELP_DIR"/*.md; do
         [[ -e $file ]] || continue  # Skip if no .md files exist
         echo "- ${file:t:r}"
     done
 
+# One argument: display the help file with line numbers
 elif [[ $# -eq 1 ]]; then
     with_what="$1.md"
     file_path="$HELP_DIR/$with_what"
@@ -23,6 +33,7 @@ elif [[ $# -eq 1 ]]; then
         echo "Help for file $1 does not exist"
     fi
 
+# Two arguments: copy specific line from help file to clipboard
 elif [[ $# -eq 2 ]]; then
     with_what="$1.md"
     line_number="$2"
