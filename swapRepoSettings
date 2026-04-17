@@ -3,23 +3,54 @@
 M2_DIR="$HOME/.m2"
 SETTINGS_FILE="$M2_DIR/settings.xml"
 
+# Dynamically discover all settings_*.xml files
+settings_files=($(ls "$M2_DIR"/settings_*.xml 2>/dev/null))
+
+# Check if any settings files were found
+if [ ${#settings_files[@]} -eq 0 ]; then
+    echo "Error: No settings_*.xml files found in $M2_DIR"
+    exit 1
+fi
+
+# Extract clean names (remove path and settings_ prefix, .xml suffix)
+declare -a clean_names
+declare -a file_map
+for file in "${settings_files[@]}"; do
+    basename_file=$(basename "$file")
+    clean_name=${basename_file#settings_}
+    clean_name=${clean_name%.xml}
+    clean_names+=("$clean_name")
+    file_map["$clean_name"]="$basename_file"
+done
+
 # Accept target as argument, else prompt
 if [ $# -eq 0 ]; then
     echo "Choose settings file to swap in:"
-    echo "1) settings_local.xml"
-    echo "2) settings_rsc.xml"
-    read -p "Enter 1 or 2: " choice
-    case $choice in
-        1) target="settings_local.xml" ;;
-        2) target="settings_rsc.xml" ;;
-        *) echo "Invalid choice"; exit 1 ;;
-    esac
+    for i in "${!clean_names[@]}"; do
+        echo "$((i+1))) ${clean_names[i]}"
+    done
+    read -p "Enter choice (1-${#clean_names[@]}): " choice
+
+    # Validate numeric input
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#clean_names[@]} ]; then
+        echo "Invalid choice"
+        exit 1
+    fi
+
+    target_clean="${clean_names[$((choice-1))]}"
+    target="${file_map[$target_clean]}"
 else
-    case "$1" in
-        local) target="settings_local.xml" ;;
-        rsc) target="settings_rsc.xml" ;;
-        *) echo "Invalid target: $1"; echo "Valid options: local, rsc"; exit 1 ;;
-    esac
+    # Check if argument matches any clean name
+    target_clean="$1"
+    target="${file_map[$target_clean]}"
+
+    if [ -z "$target" ]; then
+        echo "Invalid target: $1"
+        echo -n "Valid options: "
+        printf "%s " "${clean_names[@]}"
+        echo
+        exit 1
+    fi
 fi
 
 if [ ! -f "$M2_DIR/$target" ]; then

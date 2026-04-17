@@ -16,7 +16,8 @@ git reset *
 git stash 
 
 # discard changes for a file 
-git chckout -- file_name 
+git reset HEAD ./file.txt
+git checkout -- ./file.txt
 
 # Stash 
 git stash list 

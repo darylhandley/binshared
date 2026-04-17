@@ -27,7 +27,7 @@ else
 fi
 
 # Execute git commands
-git commit -m "$commit_message" && git push
+git commit -m "$commit_message" && git push -u origin HEAD
 
 # Check if the commands were successful
 if [ $? -eq 0 ]; then

@@ -1,10 +1,24 @@
 #!/bin/bash
 
-# Set target directory (use argument if provided, otherwise current directory)
-target_dir=${1:-.}
+# Parse arguments
+use_current_branch=false
+target_dir="."
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b)
+            use_current_branch=true
+            shift
+            ;;
+        *)
+            target_dir=$1
+            shift
+            ;;
+    esac
+done
 
 # Change to target directory if argument provided
-if [ "$1" ]; then
+if [ "$target_dir" != "." ]; then
     if [ ! -d "$target_dir" ]; then
         echo "Error: Directory '$target_dir' does not exist"
         exit 1
@@ -14,7 +28,7 @@ fi
 
 # Check if target directory is a git repository
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    if [ "$1" ]; then
+    if [ "$target_dir" != "." ]; then
         echo "Error: Directory '$target_dir' is not a git repository"
     else
         echo "Error: Current directory is not a git repository"
@@ -43,5 +57,29 @@ else
     exit 1
 fi
 
+# Determine the branch to use
+if [ "$use_current_branch" = true ]; then
+    branch=$(git branch --show-current)
+    if [ -z "$branch" ]; then
+        echo "Error: Could not determine current branch"
+        exit 1
+    fi
+else
+    branch="main"
+fi
+
+# Get the relative path from the repo root to the current directory
+repo_root=$(git rev-parse --show-toplevel)
+current_dir=$(pwd)
+relative_path=${current_dir#$repo_root}
+
+# Build the final URL with tree path if we're in a subdirectory
+if [ -n "$relative_path" ]; then
+    # Remove leading slash and add to URL
+    relative_path=${relative_path#/}
+    github_url="$github_url/tree/$branch/$relative_path"
+fi
+
+echo "Opening on branch: $branch (use -b for current branch)"
 echo "Opening: $github_url"
 open "$github_url"
